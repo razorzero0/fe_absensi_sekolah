@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Manajemen Absensi</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <!-- Tambahkan library SheetJS untuk export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8f9fa;
+      }
+
+      .sidebar {
+        min-height: 100vh;
+        background: linear-gradient(180deg, #28a745, #1e7e34);
+        width: 280px;
+        flex-shrink: 0;
+      }
+
+      @media (min-width: 768px) {
+        .sidebar {
+          position: static !important;
+        }
+        .content-wrapper {
+          margin-left: 0 !important;
+        }
+      }
+
+      .sidebar .nav-link {
+        color: #ffffff;
+        padding: 15px 20px;
+        transition: background-color 0.3s;
+        border-radius: 8px;
+        margin-bottom: 5px;
+      }
+      .sidebar .nav-link:hover,
+      .sidebar .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      .sidebar-header {
+        padding: 20px;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+      .card-table {
+        border-radius: 12px;
+      }
+
+      .offcanvas-md {
+        width: 280px;
+      }
+
+      .alert.fixed-top {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1060;
+      }
+      div.dt-container select.dt-input {
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <nav
+        class="sidebar offcanvas-md offcanvas-start d-flex flex-column p-3"
+        tabindex="-1"
+        id="sidebarMenu"
+        aria-labelledby="sidebarMenuLabel"
+      >
+        <div class="offcanvas-header d-md-none">
+          <h5 class="offcanvas-title text-white" id="sidebarMenuLabel">
+            ADMIN Absensi
+          </h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="offcanvas"
+            data-bs-target="#sidebarMenu"
+            aria-label="Close"
+          ></button>
+        </div>
+
+        <div
+          class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto"
+        >
+          <div class="sidebar-header text-center mb-4 d-none d-md-block">
+            ADMIN Absensi
+          </div>
+          <nav class="nav flex-column flex-grow-1">
+            <a class="nav-link" href="admin_dashboard.html">
+              <i class="fas fa-home me-2"></i> Dashboard
+            </a>
+            <a class="nav-link" href="admin_manajemen_siswa.html">
+              <i class="fas fa-users me-2"></i> Manajemen Siswa
+            </a>
+            <a class="nav-link active" href="admin_manajemen_absensi.html">
+              <i class="fas fa-calendar-check me-2"></i> Manajemen Absensi
+            </a>
+            <a class="nav-link mt-auto" href="admin_login.html">
+              <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </a>
+          </nav>
+        </div>
+      </nav>
+
+      <main class="content-wrapper flex-grow-1 p-3 p-md-4">
+        <div class="d-md-none mb-3 d-flex align-items-center">
+          <button
+            class="btn btn-success"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sidebarMenu"
+            aria-controls="sidebarMenu"
+          >
+            <i class="fas fa-bars"></i> Menu
+          </button>
+          <span class="h4 ms-3 text-success">Manajemen Absensi</span>
+        </div>
+
+        <h1 class="mb-4 d-none d-md-block">Manajemen Absensi Siswa</h1>
+
+        <div class="row mb-4">
+          <div class="col-md-3 mb-2">
+            <input
+              type="date"
+              class="form-control rounded-3"
+              id="filterTanggal"
+              placeholder="Filter Tanggal"
+            />
+          </div>
+          <div class="col-md-3 mb-2">
+            <select class="form-select rounded-3" id="filterKelas">
+              <option value="">Semua Kelas</option>
+              <option value="X IPA 1">X IPA 1</option>
+              <option value="XI IPS 2">XI IPS 2</option>
+              <option value="XII BAHASA 3">XII BAHASA 3</option>
+              <option value="X IPS 1">X IPS 1</option>
+              <option value="XI IPA 2">XI IPA 2</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-2">
+            <select class="form-select rounded-3" id="filterKeterangan">
+              <option value="">Semua Keterangan</option>
+              <option value="Hadir">Hadir</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Izin">Izin</option>
+              <option value="Alpa">Alpa</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-2 d-grid">
+            <button class="btn btn-outline-success rounded-3" id="exportExcel">
+              <i class="fas fa-download me-2"></i> Export ke Excel
+            </button>
+          </div>
+        </div>
+
+        <div class="card card-table shadow-sm">
+          <div class="card-header bg-success text-white">
+            <span class="fw-bold"
+              ><i class="fas fa-table me-2"></i> Data Seluruh Absensi</span
+            >
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table
+                id="absensiTable"
+                class="table table-striped table-hover"
+                style="width: 100%"
+              >
+                <thead>
+                  <tr>
+                    <th>NIS</th>
+                    <th>Nama Siswa</th>
+                    <th>Kelas</th>
+                    <th>Tanggal</th>
+                    <th>Waktu Masuk</th>
+                    <th>Keterangan</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      class="modal fade"
+      id="editAbsensiModal"
+      tabindex="-1"
+      aria-labelledby="editAbsensiModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title" id="editAbsensiModalLabel">
+              <i class="fas fa-edit me-2"></i> Edit Data Absensi
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-dark"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <form id="editAbsensiForm">
+            <div class="modal-body">
+              <input type="hidden" id="edit-absensi-id" />
+              <div class="mb-3">
+                <label for="edit-nama-siswa" class="form-label"
+                  >Siswa (NIS - Nama)</label
+                >
+                <input
+                  type="text"
+                  class="form-control rounded-3"
+                  id="edit-nama-siswa"
+                  readonly
+                />
+              </div>
+              <div class="mb-3">
+                <label for="edit-tanggal" class="form-label"
+                  >Tanggal Absensi</label
+                >
+                <input
+                  type="date"
+                  class="form-control rounded-3"
+                  id="edit-tanggal"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="edit-waktu-masuk" class="form-label"
+                  >Waktu Masuk</label
+                >
+                <input
+                  type="time"
+                  class="form-control rounded-3"
+                  id="edit-waktu-masuk"
+                />
+                <div class="form-text">Kosongkan jika status bukan Hadir.</div>
+              </div>
+              <div class="mb-3">
+                <label for="edit-keterangan" class="form-label"
+                  >Keterangan</label
+                >
+                <select
+                  class="form-select rounded-3"
+                  id="edit-keterangan"
+                  required
+                >
+                  <option value="Hadir">Hadir</option>
+                  <option value="Sakit">Sakit</option>
+                  <option value="Izin">Izin</option>
+                  <option value="Alpa">Alpa</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary rounded-3"
+                data-bs-dismiss="modal"
+              >
+                Batal
+              </button>
+              <button type="submit" class="btn btn-warning rounded-3">
+                <i class="fas fa-save me-1"></i> Simpan Perubahan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+      type="text/javascript"
+      charset="utf8"
+      src="https://cdn.datatables.net/2.3.4/js/dataTables.js"
+    ></script>
+
+    <script>
+      $(document).ready(function () {
+        // Data Dummy Absensi yang Diperluas
+        let absensiData = [
+          {
+            id: 101,
+            nis: "123456",
+            nama: "Ahmad Budi Santoso",
+            kelas: "XII IPA 1",
+            tanggal: "2025-10-01",
+            masuk: "07:05",
+            keterangan: "Hadir",
+          },
+          {
+            id: 102,
+            nis: "123457",
+            nama: "Siti Aminah",
+            kelas: "XI IPS 2",
+            tanggal: "2025-10-01",
+            masuk: "N/A",
+            keterangan: "Sakit",
+          },
+          {
+            id: 103,
+            nis: "123458",
+            nama: "Joko Susanto",
+            kelas: "X IPA 1",
+            tanggal: "2025-10-01",
+            masuk: "N/A",
+            keterangan: "Alpa",
+          },
+          {
+            id: 104,
+            nis: "123459",
+            nama: "Dewi Lestari",
+            kelas: "XII BAHASA 3",
+            tanggal: "2025-10-02",
+            masuk: "07:00",
+            keterangan: "Hadir",
+          },
+          {
+            id: 105,
+            nis: "123460",
+            nama: "Rizky Fadillah",
+            kelas: "X IPA 1",
+            tanggal: "2025-10-02",
+            masuk: "N/A",
+            keterangan: "Izin",
+          },
+          {
+            id: 106,
+            nis: "123461",
+            nama: "Bagus Prakoso",
+            kelas: "XI IPS 2",
+            tanggal: "2025-10-02",
+            masuk: "06:55",
+            keterangan: "Hadir",
+          },
+          {
+            id: 107,
+            nis: "123462",
+            nama: "Lina Marlina",
+            kelas: "X IPS 1",
+            tanggal: "2025-10-03",
+            masuk: "07:10",
+            keterangan: "Hadir",
+          },
+          {
+            id: 108,
+            nis: "123463",
+            nama: "Bima Sakti",
+            kelas: "XI IPA 2",
+            tanggal: "2025-10-03",
+            masuk: "N/A",
+            keterangan: "Sakit",
+          },
+          {
+            id: 109,
+            nis: "123464",
+            nama: "Rina Wulandari",
+            kelas: "XII BAHASA 3",
+            tanggal: "2025-10-04",
+            masuk: "N/A",
+            keterangan: "Izin",
+          },
+          {
+            id: 110,
+            nis: "123465",
+            nama: "Adi Nugroho",
+            kelas: "X IPA 1",
+            tanggal: "2025-10-04",
+            masuk: "07:15",
+            keterangan: "Hadir",
+          },
+        ];
+
+        // Fungsi untuk membuat badge keterangan
+        function createKeteranganBadge(status) {
+          let badgeClass;
+          switch (status) {
+            case "Hadir":
+              badgeClass = "bg-success";
+              break;
+            case "Sakit":
+              badgeClass = "bg-warning text-dark";
+              break;
+            case "Izin":
+              badgeClass = "bg-info text-dark";
+              break;
+            case "Alpa":
+              badgeClass = "bg-danger";
+              break;
+            default:
+              badgeClass = "bg-secondary";
+          }
+          // Tambahkan atribut data-keterangan-raw untuk pengambilan data mentah saat Export
+          return `<span class="badge ${badgeClass}" data-keterangan-raw="${status}">${status}</span>`;
+        }
+
+        // Fungsi untuk membuat baris aksi
+        function createActionButtons(data) {
+          return `
+                    <button class="btn btn-sm btn-warning rounded-3 me-2 btn-edit-absensi" data-id="${data.id}" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger rounded-3 btn-delete-absensi" data-id="${data.id}" title="Hapus">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+        }
+
+        // Inisialisasi DataTables
+        let table = $("#absensiTable").DataTable({
+          data: absensiData.map((d) => [
+            d.nis,
+            d.nama,
+            d.kelas,
+            d.tanggal,
+            d.masuk,
+            createKeteranganBadge(d.keterangan),
+            createActionButtons(d),
+          ]),
+          columns: [
+            { title: "NIS" },
+            { title: "Nama Siswa" },
+            { title: "Kelas" },
+            { title: "Tanggal" },
+            { title: "Waktu Masuk" },
+            { title: "Keterangan" },
+            { title: "Aksi", orderable: false, searchable: false },
+          ],
+          createdRow: function (row, data, dataIndex) {
+            $(row).attr("data-absensi-id", absensiData[dataIndex].id);
+          },
+          // FIX DataTables: Menggunakan URL file bahasa yang valid dan stabil
+          //   language: {
+          //     url: "https://cdn.datatables.net/plug-ins/2.0.8/i18n/id.json",
+          //   },
+          responsive: true,
+        });
+
+        // --- Perbaikan Fungsionalitas Filter ---
+
+        // Filter Tanggal
+        $("#filterTanggal").on("change", function () {
+          const tanggal = $(this).val();
+          table
+            .column(3)
+            .search(tanggal ? `^${tanggal}$` : "", true, false) // Pencarian tepat
+            .draw();
+        });
+
+        // Filter Kelas
+        $("#filterKelas").on("change", function () {
+          const kelas = $(this).val();
+          table
+            .column(2)
+            .search(kelas ? `^${kelas}$` : "", true, false) // Pencarian tepat
+            .draw();
+        });
+
+        // Filter Keterangan (Perbaikan logika untuk mencari teks di dalam HTML badge)
+        $("#filterKeterangan").on("change", function () {
+          const status = $(this).val();
+          // Hanya mencari teks keterangan (tanpa regex di sini agar lebih fleksibel mencari teks di dalam HTML)
+          table.column(5).search(status).draw();
+        });
+
+        // --- Perbaikan Fungsionalitas Export ke Excel ---
+
+        $("#exportExcel").on("click", function () {
+          const filteredData = table
+            .rows({ search: "applied" }) // Ambil hanya data yang terfilter
+            .data()
+            .toArray()
+            .map((row) => ({
+              NIS: row[0],
+              "Nama Siswa": row[1],
+              Kelas: row[2],
+              Tanggal: row[3],
+              "Waktu Masuk": row[4],
+              // Ambil data mentah dari atribut data-keterangan-raw
+              Keterangan: $(row[5]).data("keterangan-raw") || row[5],
+            }));
+
+          // Konversi array data menjadi Worksheet
+          const worksheet = XLSX.utils.json_to_sheet(filteredData);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Absensi");
+
+          // PERBAIKAN ERROR: Menggunakan XLSX.writeFile() (metode modern)
+          try {
+            XLSX.writeFile(workbook, "Data_Absensi_Filter.xlsx");
+          } catch (e) {
+            console.error(e);
+            showCustomAlert(
+              "danger",
+              "Gagal membuat file Excel. Cek konsol browser untuk detail."
+            );
+          }
+        });
+
+        // Logika Edit Absensi - Isi Modal
+        $("#absensiTable tbody").on("click", ".btn-edit-absensi", function () {
+          const rowElement = $(this).closest("tr");
+          const absensiId = rowElement.data("absensi-id");
+          const data = absensiData.find((d) => d.id === absensiId);
+
+          if (data) {
+            $("#edit-absensi-id").val(data.id);
+            $("#edit-nama-siswa").val(`${data.nis} - ${data.nama}`);
+            $("#edit-tanggal").val(data.tanggal);
+            $("#edit-waktu-masuk").val(data.masuk === "N/A" ? "" : data.masuk);
+            $("#edit-keterangan").val(data.keterangan);
+
+            const editModal = new bootstrap.Modal(
+              document.getElementById("editAbsensiModal")
+            );
+            editModal.show();
+          }
+        });
+
+        // Logika Simpan Edit Absensi
+        $("#editAbsensiForm").on("submit", function (e) {
+          e.preventDefault();
+          const id = parseInt($("#edit-absensi-id").val());
+          const tanggal = $("#edit-tanggal").val();
+          let masuk = $("#edit-waktu-masuk").val();
+          const keterangan = $("#edit-keterangan").val();
+
+          if (keterangan !== "Hadir") {
+            masuk = "N/A";
+          } else if (!masuk) {
+            masuk = "07:00";
+          }
+
+          const index = absensiData.findIndex((d) => d.id === id);
+          if (index !== -1) {
+            absensiData[index].tanggal = tanggal;
+            absensiData[index].masuk = masuk;
+            absensiData[index].keterangan = keterangan;
+
+            const row = table.row($(`[data-absensi-id='${id}']`));
+            if (row.length) {
+              row
+                .data([
+                  absensiData[index].nis,
+                  absensiData[index].nama,
+                  absensiData[index].kelas,
+                  absensiData[index].tanggal,
+                  absensiData[index].masuk,
+                  createKeteranganBadge(absensiData[index].keterangan),
+                  createActionButtons(absensiData[index]),
+                ])
+                .draw(false);
+            }
+          }
+
+          bootstrap.Modal.getInstance(
+            document.getElementById("editAbsensiModal")
+          ).hide();
+          showCustomAlert("success", "Data Absensi Berhasil Diperbarui! ✅");
+        });
+
+        // Logika Hapus Absensi
+        $("#absensiTable tbody").on(
+          "click",
+          ".btn-delete-absensi",
+          function () {
+            const rowElement = $(this).closest("tr");
+            const absensiId = rowElement.data("absensi-id");
+            const data = absensiData.find((d) => d.id === absensiId);
+
+            const namaSiswa = data
+              ? `${data.nama} (${data.tanggal})`
+              : "Data Absensi ini";
+
+            showDeleteConfirmationModal(absensiId, rowElement, namaSiswa);
+          }
+        );
+
+        // Custom Alert
+        function showCustomAlert(type, message) {
+          const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show fixed-top mt-3 mx-auto" role="alert" style="max-width: 400px; z-index: 1060;">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+          $("body").append(alertHtml);
+          setTimeout(() => $(".alert").alert("close"), 3000);
+        }
+
+        // Custom Delete Confirmation Modal
+        function showDeleteConfirmationModal(absensiId, rowElement, itemLabel) {
+          const modalId = "deleteConfirmModalAbsensi";
+          if ($("#" + modalId).length === 0) {
+            const modalHtml = `
+                        <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-4 border-danger border-2">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Konfirmasi Hapus Data</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" id="deleteModalBodyAbsensi">
+                                        Anda yakin ingin menghapus data absensi ini? Aksi ini tidak dapat dibatalkan.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                                        <button type="button" class="btn btn-danger rounded-3" id="confirmDeleteButtonAbsensi">Hapus Permanen</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            $("body").append(modalHtml);
+          }
+
+          $("#deleteModalBodyAbsensi").html(
+            `Anda yakin ingin menghapus data absensi **${itemLabel}**? Aksi ini tidak dapat dibatalkan.`
+          );
+
+          const modal = new bootstrap.Modal(document.getElementById(modalId));
+          modal.show();
+
+          $("#confirmDeleteButtonAbsensi")
+            .off("click")
+            .on("click", function () {
+              const initialLength = absensiData.length;
+              absensiData = absensiData.filter((d) => d.id !== absensiId);
+
+              if (absensiData.length < initialLength) {
+                table.row(rowElement).remove().draw(false);
+                modal.hide();
+                showCustomAlert(
+                  "danger",
+                  `Data Absensi ${itemLabel} Berhasil Dihapus. 🗑️`
+                );
+              } else {
+                modal.hide();
+                showCustomAlert(
+                  "warning",
+                  "Gagal menghapus data. Data tidak ditemukan."
+                );
+              }
+            });
+        }
+      });
+    </script>
+  </body>
+</html>

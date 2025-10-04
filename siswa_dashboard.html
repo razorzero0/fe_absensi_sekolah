@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Siswa - Dashboard Absensi</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8f9fa;
+      }
+      /* --- Perbaikan Utama untuk Layout Desktop --- */
+      /* Hapus 'position: fixed' untuk desktop. Kita akan gunakan Grid/Flex bawaan Bootstrap */
+      .sidebar {
+        min-height: 100vh;
+        background: linear-gradient(180deg, #007bff, #0056b3);
+        /* Tambahkan lebar agar layout flex bekerja, misal 280px */
+        width: 280px;
+        flex-shrink: 0; /* Pastikan tidak mengecil */
+      }
+
+      /* Pada layar lebar (md ke atas), atur layout dua kolom */
+      @media (min-width: 768px) {
+        /* Hapus properti 'position-fixed' pada layar desktop */
+        .sidebar {
+          position: static !important; /* Timpa properti fixed dari HTML */
+        }
+        .content-wrapper {
+          /* Pastikan Main Content mengambil sisa ruang */
+          margin-left: 0 !important;
+        }
+      }
+
+      /* --- Styling Sidebar Tetap Dipertahankan --- */
+      .sidebar .nav-link {
+        color: #ffffff;
+        padding: 15px 20px;
+        transition: background-color 0.3s;
+        border-radius: 8px;
+        margin-bottom: 5px;
+      }
+      .sidebar .nav-link:hover,
+      .sidebar .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      .sidebar-header {
+        padding: 20px;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      /* --- Styling Card dan Tombol --- */
+      .card-dashboard {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-radius: 12px;
+      }
+      .card-dashboard:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+      .btn-absen {
+        font-size: 1.25rem;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 700;
+      }
+
+      /* --- Responsive Sidebar (Mode Mobile: Offcanvas) --- */
+      /* Gunakan Offcanvas Bootstrap untuk tampilan Mobile, lebih baik dari transformasi manual */
+      /* Aturan ini bisa dihapus jika menggunakan Offcanvas Bootstrap secara penuh */
+      .offcanvas-md {
+        width: 280px; /* Sesuaikan lebar offcanvas dengan lebar sidebar */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <nav
+        class="sidebar offcanvas-md offcanvas-start d-flex flex-column p-3"
+        tabindex="-1"
+        id="sidebarMenu"
+        aria-labelledby="sidebarMenuLabel"
+      >
+        <div class="offcanvas-header d-md-none">
+          <h5 class="offcanvas-title text-white" id="sidebarMenuLabel">
+            SIA Absensi
+          </h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            data-bs-dismiss="offcanvas"
+            data-bs-target="#sidebarMenu"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div
+          class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto"
+        >
+          <div class="sidebar-header text-center mb-4 d-none d-md-block">
+            SIA Absensi
+          </div>
+          <nav class="nav flex-column flex-grow-1">
+            <a class="nav-link active" href="siswa_dashboard.html">
+              <i class="fas fa-home me-2"></i> Dashboard
+            </a>
+            <a class="nav-link" href="siswa_riwayat_absensi.html">
+              <i class="fas fa-history me-2"></i> Riwayat Absensi
+            </a>
+            <a class="nav-link" href="siswa_profile.html">
+              <i class="fas fa-user me-2"></i> Profil
+            </a>
+            <a class="nav-link mt-auto" href="siswa_login.html">
+              <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </a>
+          </nav>
+        </div>
+      </nav>
+
+      <main class="content-wrapper flex-grow-1 p-3 p-md-4">
+        <div class="d-md-none mb-3 d-flex align-items-center">
+          <button
+            class="btn btn-primary"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sidebarMenu"
+            aria-controls="sidebarMenu"
+          >
+            <i class="fas fa-bars"></i> Menu
+          </button>
+          <span class="h4 ms-3 text-primary">Dashboard Siswa</span>
+        </div>
+
+        <h1 class="mb-4 d-none d-md-block">Dashboard Siswa</h1>
+        <p class="lead text-muted">
+          Selamat datang, **Nama Siswa**! Hari ini **<span
+            id="currentDate"
+          ></span
+          >**.
+        </p>
+
+        <div class="row mb-5 justify-content-center">
+          <div class="col-12 col-lg-8 text-center">
+            <div class="p-4 bg-white rounded-4 shadow-lg">
+              <h3 class="mb-3 text-primary">Status Absensi Hari Ini</h3>
+              <p class="text-muted" id="statusAbsensi">
+                Anda belum melakukan absensi.
+              </p>
+              <button
+                id="btnAbsen"
+                class="btn btn-success btn-absen w-100"
+                data-bs-toggle="modal"
+                data-bs-target="#absenModal"
+              >
+                <i class="fas fa-fingerprint me-2"></i> ABSEN SEKARANG
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-3">
+            <div class="card card-dashboard text-white bg-primary shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Total Kehadiran</h5>
+                <p class="card-text h2" id="totalHadir">20</p>
+                <small>Bulan Ini</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="card card-dashboard text-white bg-warning shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Izin/Sakit</h5>
+                <p class="card-text h2" id="totalIzinSakit">2</p>
+                <small>Semester Ini</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="card card-dashboard text-white bg-danger shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Alpa/Tanpa Keterangan</h5>
+                <p class="card-text h2" id="totalAlpa">1</p>
+                <small>Semester Ini</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="card card-dashboard text-white bg-info shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Persentase Kehadiran</h5>
+                <p class="card-text h2" id="persentaseHadir">95%</p>
+                <small>Total Kehadiran</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      class="modal fade"
+      id="absenModal"
+      tabindex="-1"
+      aria-labelledby="absenModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title" id="absenModalLabel">
+              <i class="fas fa-fingerprint me-2"></i> Konfirmasi Absensi
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>Anda akan melakukan absensi **Kehadiran** untuk hari ini.</p>
+            <p>
+              Pastikan Anda berada di lingkungan sekolah atau sesuai ketentuan
+              absensi.
+            </p>
+            <div class="alert alert-info" role="alert">
+              Waktu Absensi: **<span id="absenTime"></span>**
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary rounded-3"
+              data-bs-dismiss="modal"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn btn-success rounded-3"
+              id="confirmAbsen"
+            >
+              Konfirmasi Absen
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Set tanggal saat ini
+      document.getElementById("currentDate").textContent =
+        new Date().toLocaleDateString("id-ID", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      document.getElementById("absenTime").textContent =
+        new Date().toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+      // Simulasi Logika Absensi
+      document
+        .getElementById("confirmAbsen")
+        .addEventListener("click", function () {
+          const absenModal = bootstrap.Modal.getInstance(
+            document.getElementById("absenModal")
+          );
+          absenModal.hide();
+
+          // Simulasi Absen Sukses
+          document.getElementById("statusAbsensi").innerHTML = `
+            <span class="text-success fw-bold">Anda telah absen pada pukul ${new Date().toLocaleTimeString(
+              "id-ID",
+              { hour: "2-digit", minute: "2-digit" }
+            )}.</span>
+          `;
+          document.getElementById("btnAbsen").disabled = true;
+          document.getElementById("btnAbsen").textContent = "Absensi Selesai";
+          document.getElementById("btnAbsen").classList.remove("btn-success");
+          document.getElementById("btnAbsen").classList.add("btn-secondary");
+
+          // Menggunakan alert simulasi (bukan window.alert)
+          const alertPlaceholder = document.createElement("div");
+          alertPlaceholder.innerHTML = [
+            `<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">`,
+            `  <strong>Absensi Berhasil!</strong> Anda tercatat hadir hari ini.`,
+            `  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`,
+            `</div>`,
+          ].join("");
+
+          const mainContent = document.querySelector(".content-wrapper");
+          mainContent.insertBefore(alertPlaceholder, mainContent.children[2]);
+        });
+    </script>
+  </body>
+</html>
