@@ -21,29 +21,22 @@
         font-family: "Inter", sans-serif;
         background-color: #f8f9fa;
       }
-      /* --- Perbaikan Utama untuk Layout Desktop --- */
-      /* Hapus 'position: fixed' untuk desktop. Kita akan gunakan Grid/Flex bawaan Bootstrap */
       .sidebar {
         min-height: 100vh;
         background: linear-gradient(180deg, #007bff, #0056b3);
-        /* Tambahkan lebar agar layout flex bekerja, misal 280px */
         width: 280px;
-        flex-shrink: 0; /* Pastikan tidak mengecil */
+        flex-shrink: 0;
       }
 
-      /* Pada layar lebar (md ke atas), atur layout dua kolom */
       @media (min-width: 768px) {
-        /* Hapus properti 'position-fixed' pada layar desktop */
         .sidebar {
-          position: static !important; /* Timpa properti fixed dari HTML */
+          position: static !important;
         }
         .content-wrapper {
-          /* Pastikan Main Content mengambil sisa ruang */
           margin-left: 0 !important;
         }
       }
 
-      /* --- Styling Sidebar Tetap Dipertahankan --- */
       .sidebar .nav-link {
         color: #ffffff;
         padding: 15px 20px;
@@ -62,7 +55,6 @@
         font-weight: 700;
       }
 
-      /* --- Styling Card dan Tombol --- */
       .card-dashboard {
         transition: transform 0.3s, box-shadow 0.3s;
         border-radius: 12px;
@@ -78,11 +70,8 @@
         font-weight: 700;
       }
 
-      /* --- Responsive Sidebar (Mode Mobile: Offcanvas) --- */
-      /* Gunakan Offcanvas Bootstrap untuk tampilan Mobile, lebih baik dari transformasi manual */
-      /* Aturan ini bisa dihapus jika menggunakan Offcanvas Bootstrap secara penuh */
       .offcanvas-md {
-        width: 280px; /* Sesuaikan lebar offcanvas dengan lebar sidebar */
+        width: 280px;
       }
     </style>
   </head>
@@ -154,17 +143,20 @@
         <div class="row mb-5 justify-content-center">
           <div class="col-12 col-lg-8 text-center">
             <div class="p-4 bg-white rounded-4 shadow-lg">
-              <h3 class="mb-3 text-primary">Status Absensi Hari Ini</h3>
+              <h3 class="mb-3 text-primary" id="absenTitle">
+                Status Absensi Hari Ini
+              </h3>
               <p class="text-muted" id="statusAbsensi">
-                Anda belum melakukan absensi.
+                Anda belum melakukan absensi datang.
               </p>
               <button
                 id="btnAbsen"
                 class="btn btn-success btn-absen w-100"
                 data-bs-toggle="modal"
                 data-bs-target="#absenModal"
+                data-absen-type="masuk"
               >
-                <i class="fas fa-fingerprint me-2"></i> ABSEN SEKARANG
+                <i class="fas fa-fingerprint me-2"></i> ABSEN DATANG
               </button>
             </div>
           </div>
@@ -220,19 +212,21 @@
     >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4">
-          <div class="modal-header bg-success text-white">
+          <div class="modal-header" id="modalHeader">
             <h5 class="modal-title" id="absenModalLabel">
               <i class="fas fa-fingerprint me-2"></i> Konfirmasi Absensi
             </h5>
             <button
               type="button"
-              class="btn-close btn-close-white"
+              class="btn-close"
               data-bs-dismiss="modal"
               aria-label="Close"
             ></button>
           </div>
           <div class="modal-body">
-            <p>Anda akan melakukan absensi **Kehadiran** untuk hari ini.</p>
+            <p id="modalAbsenTypeInfo">
+              Anda akan melakukan absensi **DATANG** untuk hari ini.
+            </p>
             <p>
               Pastikan Anda berada di lingkungan sekolah atau sesuai ketentuan
               absensi.
@@ -263,54 +257,209 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // Set tanggal saat ini
-      document.getElementById("currentDate").textContent =
-        new Date().toLocaleDateString("id-ID", {
+      // Variabel status STATIS (akan reset saat refresh halaman)
+      let hasAbsenMasuk = false;
+      let hasAbsenPulang = false;
+      let absenMasukTime = null;
+      let absenPulangTime = null;
+
+      // Elemen DOM
+      const currentDateEl = document.getElementById("currentDate");
+      const absenTimeEl = document.getElementById("absenTime");
+      const statusAbsensiEl = document.getElementById("statusAbsensi");
+      const btnAbsenEl = document.getElementById("btnAbsen");
+      const confirmAbsenEl = document.getElementById("confirmAbsen");
+      const absenModalEl = document.getElementById("absenModal");
+      const modalHeaderEl = document.getElementById("modalHeader");
+      const modalAbsenTypeInfoEl =
+        document.getElementById("modalAbsenTypeInfo");
+      const mainContentEl = document.querySelector(".content-wrapper");
+
+      // --- Fungsi-fungsi Utama ---
+
+      // 1. Tampilkan Tanggal dan Waktu
+      function updateTimeAndDate() {
+        const now = new Date();
+        currentDateEl.textContent = now.toLocaleDateString("id-ID", {
           weekday: "long",
           year: "numeric",
           month: "long",
           day: "numeric",
         });
-      document.getElementById("absenTime").textContent =
-        new Date().toLocaleTimeString("id-ID", {
+        absenTimeEl.textContent = now.toLocaleTimeString("id-ID", {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
         });
+      }
+      setInterval(updateTimeAndDate, 1000);
+      updateTimeAndDate();
 
-      // Simulasi Logika Absensi
-      document
-        .getElementById("confirmAbsen")
-        .addEventListener("click", function () {
-          const absenModal = bootstrap.Modal.getInstance(
-            document.getElementById("absenModal")
-          );
-          absenModal.hide();
+      // 2. Perbarui Tampilan Tombol berdasarkan Status Absen
+      function updateAbsenStatusView() {
+        if (hasAbsenMasuk && hasAbsenPulang) {
+          // KASUS 3: Absen Pulang sudah dilakukan (Tombol tetap aktif, siap untuk Pulang Ganda)
+          btnAbsenEl.classList.remove("btn-success");
+          btnAbsenEl.classList.add("btn-danger");
+          btnAbsenEl.textContent = "ABSEN PULANG (SUDAH TERCATAT)";
+          btnAbsenEl.setAttribute("data-absen-type", "pulang");
 
-          // Simulasi Absen Sukses
-          document.getElementById("statusAbsensi").innerHTML = `
-            <span class="text-success fw-bold">Anda telah absen pada pukul ${new Date().toLocaleTimeString(
-              "id-ID",
-              { hour: "2-digit", minute: "2-digit" }
-            )}.</span>
+          statusAbsensiEl.innerHTML = `
+            <span class="text-success fw-bold">Absensi Hari Ini telah selesai.</span><br>
+            <span class="text-primary fw-bold">Masuk: ${absenMasukTime} | Pulang Terakhir: ${absenPulangTime}</span><br>
+            <small class="text-danger">Absen pulang ganda akan menimpa waktu pulang sebelumnya.</small>
           `;
-          document.getElementById("btnAbsen").disabled = true;
-          document.getElementById("btnAbsen").textContent = "Absensi Selesai";
-          document.getElementById("btnAbsen").classList.remove("btn-success");
-          document.getElementById("btnAbsen").classList.add("btn-secondary");
+        } else if (hasAbsenMasuk) {
+          // KASUS 2: Absen Datang sudah dilakukan, siap untuk Absen Pulang
+          btnAbsenEl.classList.remove("btn-success", "btn-secondary");
+          btnAbsenEl.classList.add("btn-danger");
+          btnAbsenEl.textContent = "ABSEN PULANG";
+          btnAbsenEl.setAttribute("data-absen-type", "pulang");
+          statusAbsensiEl.innerHTML = `
+            <span class="text-success fw-bold">Absensi Datang dicatat pada pukul ${absenMasukTime}.</span><br>
+            <span class="text-info fw-bold">Silahkan lakukan Absen Pulang.</span>
+          `;
+        } else {
+          // KASUS 1: Belum ada absensi sama sekali
+          btnAbsenEl.classList.remove("btn-danger", "btn-secondary");
+          btnAbsenEl.classList.add("btn-success");
+          btnAbsenEl.textContent = "ABSEN DATANG";
+          btnAbsenEl.setAttribute("data-absen-type", "masuk");
+          statusAbsensiEl.innerHTML = "Anda belum melakukan absensi datang.";
+        }
+        // Tombol TIDAK PERNAH disable
+        btnAbsenEl.disabled = false;
+      }
 
-          // Menggunakan alert simulasi (bukan window.alert)
-          const alertPlaceholder = document.createElement("div");
-          alertPlaceholder.innerHTML = [
-            `<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">`,
-            `  <strong>Absensi Berhasil!</strong> Anda tercatat hadir hari ini.`,
-            `  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`,
-            `</div>`,
-          ].join("");
+      // 3. Konfigurasi Modal Sebelum Ditampilkan
+      absenModalEl.addEventListener("show.bs.modal", function (event) {
+        const button = event.relatedTarget;
+        const absenType = button.getAttribute("data-absen-type");
+        const isMasuk = absenType === "masuk";
+        const isPulang = absenType === "pulang";
 
-          const mainContent = document.querySelector(".content-wrapper");
-          mainContent.insertBefore(alertPlaceholder, mainContent.children[2]);
+        // Update Header Modal
+        let headerClass = isMasuk
+          ? "bg-success"
+          : isPulang
+          ? "bg-danger"
+          : "bg-primary";
+        modalHeaderEl.className = `modal-header ${headerClass} text-white`;
+
+        const typeText = isMasuk ? "DATANG" : "PULANG";
+        document.getElementById("absenModalLabel").innerHTML = `
+            <i class="fas ${
+              isMasuk ? "fa-sign-in-alt" : "fa-sign-out-alt"
+            } me-2"></i> Konfirmasi Absensi ${typeText}
+        `;
+
+        // Update Body Modal
+        modalAbsenTypeInfoEl.innerHTML = `
+            Anda akan melakukan absensi **${typeText}** untuk hari ini.
+            ${
+              isPulang && hasAbsenPulang
+                ? '<br><small class="text-danger fw-bold">Perhatian: Absensi Pulang Anda akan diperbarui dengan waktu saat ini.</small>'
+                : ""
+            }
+        `;
+
+        // Update Tombol Konfirmasi
+        confirmAbsenEl.className = isMasuk
+          ? "btn btn-success rounded-3"
+          : "btn btn-danger rounded-3";
+        confirmAbsenEl.textContent = `Konfirmasi Absen ${typeText}`;
+        confirmAbsenEl.setAttribute("data-absen-type", absenType);
+      });
+
+      // 4. Logika Konfirmasi Absen
+      confirmAbsenEl.addEventListener("click", function () {
+        const type = this.getAttribute("data-absen-type");
+        const currentTime = new Date().toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
         });
+
+        const absenModal = bootstrap.Modal.getInstance(absenModalEl);
+        absenModal.hide();
+
+        if (type === "masuk") {
+          // Absen Datang Berhasil
+          if (hasAbsenMasuk) {
+            showAlert(
+              "warning",
+              `Absensi **DATANG** sudah tercatat pada pukul ${absenMasukTime}. Absensi tidak diulang.`
+            );
+            return;
+          }
+
+          absenMasukTime = currentTime;
+          hasAbsenMasuk = true;
+          // *** Bagian LocalStorage dihapus ***
+
+          updateAbsenStatusView();
+          showAlert(
+            "success",
+            `Absensi **DATANG** Berhasil! Anda tercatat masuk pada pukul ${currentTime}.`
+          );
+        } else if (type === "pulang") {
+          if (!hasAbsenMasuk) {
+            showAlert(
+              "warning",
+              "Anda belum melakukan absensi datang. Tidak bisa absen pulang."
+            );
+            return;
+          }
+
+          // Absen Pulang Berhasil (dan menimpa yang sebelumnya jika ada)
+          const isGanda = hasAbsenPulang;
+
+          hasAbsenPulang = true;
+          absenPulangTime = currentTime;
+
+          // *** Bagian LocalStorage dihapus ***
+
+          updateAbsenStatusView();
+
+          if (isGanda) {
+            showAlert(
+              "warning",
+              `Absensi **PULANG** berhasil diperbarui! Waktu Pulang Terbaru: ${currentTime}.`
+            );
+          } else {
+            showAlert(
+              "info",
+              `Absensi **PULANG** Berhasil! Waktu Pulang: ${currentTime}. Sampai jumpa besok.`
+            );
+          }
+        }
+      });
+
+      // 5. Fungsi untuk menampilkan Alert
+      function showAlert(type, message) {
+        const alertPlaceholder = document.createElement("div");
+        alertPlaceholder.innerHTML = [
+          `<div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">`,
+          `  <strong>${
+            type === "success"
+              ? "Sukses!"
+              : type === "info"
+              ? "Selesai!"
+              : "Perhatian!"
+          }</strong>  ${message}`,
+          `  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`,
+          `</div>`,
+        ].join("");
+
+        const oldAlert = mainContentEl.querySelector(".alert");
+        if (oldAlert) {
+          oldAlert.remove();
+        }
+
+        mainContentEl.insertBefore(alertPlaceholder, mainContentEl.children[2]);
+      }
+
+      // Inisialisasi tampilan saat halaman dimuat
+      updateAbsenStatusView();
     </script>
   </body>
 </html>

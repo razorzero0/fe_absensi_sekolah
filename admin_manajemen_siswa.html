@@ -9,11 +9,6 @@
       rel="stylesheet"
     />
     <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.css"
-    />
-    <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
       rel="stylesheet"
     />
@@ -27,7 +22,6 @@
         font-family: "Inter", sans-serif;
         background-color: #f8f9fa;
       }
-
       /* --- Layout Desktop Fix --- */
       .sidebar {
         min-height: 100vh;
@@ -36,7 +30,6 @@
         flex-shrink: 0;
       }
 
-      /* Menonaktifkan fixed position di desktop dan memastikan layout sejajar */
       @media (min-width: 768px) {
         .sidebar {
           position: static !important;
@@ -46,7 +39,6 @@
         }
       }
 
-      /* Styling Sidebar */
       .sidebar .nav-link {
         color: #ffffff;
         padding: 15px 20px;
@@ -64,17 +56,12 @@
         font-size: 1.5rem;
         font-weight: 700;
       }
-      .card-table {
+      .form-card {
         border-radius: 12px;
       }
 
-      /* Offcanvas untuk Mobile */
       .offcanvas-md {
         width: 280px;
-      }
-
-      div.dt-container select.dt-input {
-        margin-right: 5px;
       }
     </style>
   </head>
@@ -109,7 +96,7 @@
             <a class="nav-link" href="admin_dashboard.html">
               <i class="fas fa-home me-2"></i> Dashboard
             </a>
-            <a class="nav-link active" href="admin_manajemen_siswa.html">
+            <a class="nav-link active" href="#">
               <i class="fas fa-users me-2"></i> Manajemen Siswa
             </a>
             <a class="nav-link" href="admin_manajemen_absensi.html">
@@ -136,43 +123,41 @@
           <span class="h4 ms-3 text-success">Manajemen Siswa</span>
         </div>
 
-        <h1 class="mb-4 d-none d-md-block">Manajemen Siswa</h1>
+        <h1 class="mb-4 d-none d-md-block">Manajemen Data Siswa</h1>
 
-        <div class="card card-table shadow-sm">
-          <div
-            class="card-header bg-success text-white d-flex justify-content-between align-items-center"
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="mb-0 text-success">Daftar Siswa Aktif</h4>
+          <button
+            class="btn btn-success rounded-3"
+            data-bs-toggle="modal"
+            data-bs-target="#siswaFormModal"
+            data-mode="add"
+            id="btnAddSiswa"
           >
-            <span class="fw-bold"
-              ><i class="fas fa-table me-2"></i> Daftar Siswa</span
-            >
-            <a
-              href="#"
-              class="btn btn-light btn-sm rounded-3"
-              data-bs-toggle="modal"
-              data-bs-target="#tambahSiswaModal"
-            >
-              <i class="fas fa-plus me-1"></i> Tambah Siswa Baru
-            </a>
-          </div>
+            <i class="fas fa-plus-circle me-2"></i> Tambah Siswa Baru
+          </button>
+        </div>
+
+        <div class="card shadow-sm">
           <div class="card-body">
             <div class="table-responsive">
-              <table
-                id="siswaTable"
-                class="table table-striped table-hover"
-                style="width: 100%"
-              >
+              <table class="table table-striped table-hover">
                 <thead>
                   <tr>
                     <th>NIS</th>
-                    <th>Nama Siswa</th>
+                    <th>Nama</th>
                     <th>Kelas</th>
-                    <th>Wali Murid</th>
+                    <th>L/P</th>
+                    <th>Wali</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody id="studentTableBody"></tbody>
               </table>
             </div>
+            <p class="text-muted small mt-3">
+              Total <span id="totalStudents">0</span> Siswa ditemukan.
+            </p>
           </div>
         </div>
       </main>
@@ -180,16 +165,16 @@
 
     <div
       class="modal fade"
-      id="tambahSiswaModal"
+      id="siswaFormModal"
       tabindex="-1"
-      aria-labelledby="tambahSiswaModalLabel"
+      aria-labelledby="siswaFormModalLabel"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-4">
-          <div class="modal-header bg-success text-white">
-            <h5 class="modal-title" id="tambahSiswaModalLabel">
-              <i class="fas fa-plus me-2"></i> Tambah Siswa Baru
+          <div class="modal-header bg-success text-white" id="modalHeader">
+            <h5 class="modal-title" id="siswaFormModalLabel">
+              <i class="fas fa-plus-circle me-2"></i> Tambah Siswa Baru
             </h5>
             <button
               type="button"
@@ -199,79 +184,42 @@
             ></button>
           </div>
           <div class="modal-body">
-            <p>Form penambahan siswa berada di sini.</p>
-            <div class="alert alert-info">
-              Ini adalah simulasi. Anda dapat mengarahkan tombol "Tambah Siswa
-              Baru" ke halaman lain (`admin_tambah_siswa.html`) atau menggunakan
-              modal seperti ini.
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary rounded-3"
-              data-bs-dismiss="modal"
-            >
-              Tutup
-            </button>
-            <a href="admin_tambah_siswa.html" class="btn btn-success rounded-3">
-              Tambah Siswa Baru
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      class="modal fade"
-      id="editSiswaModal"
-      tabindex="-1"
-      aria-labelledby="editSiswaModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content rounded-4">
-          <div class="modal-header bg-warning text-white">
-            <h5 class="modal-title" id="editSiswaModalLabel">
-              <i class="fas fa-edit me-2"></i> Edit Data Siswa
-            </h5>
-            <button
-              type="button"
-              class="btn-close btn-close-white"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <form id="editSiswaForm">
-            <div class="modal-body">
-              <input type="hidden" id="edit-siswa-id" />
+            <form id="siswaForm">
+              <input type="hidden" id="originalNis" />
               <div class="row g-3">
                 <div class="col-md-6">
-                  <label for="edit-nis" class="form-label">NIS</label>
-                  <input
-                    type="text"
-                    class="form-control rounded-3"
-                    id="edit-nis"
-                    required
-                    readonly
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label for="edit-nama" class="form-label">Nama Lengkap</label>
-                  <input
-                    type="text"
-                    class="form-control rounded-3"
-                    id="edit-nama"
-                    required
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label for="edit-kelas" class="form-label">Kelas</label>
-                  <select
-                    class="form-select rounded-3"
-                    id="edit-kelas"
-                    required
+                  <label for="nis" class="form-label"
+                    >NIS (Nomor Induk Siswa)
+                    <span class="text-danger">*</span></label
                   >
+                  <input
+                    type="text"
+                    class="form-control rounded-3"
+                    id="nis"
+                    required
+                    placeholder="Contoh: 123460"
+                    pattern="[0-9]{6,10}"
+                    title="NIS harus berupa angka antara 6 hingga 10 digit."
+                  />
+                  <div class="form-text">NIS harus unik.</div>
+                </div>
+                <div class="col-md-6">
+                  <label for="namaLengkap" class="form-label"
+                    >Nama Lengkap <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control rounded-3"
+                    id="namaLengkap"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="kelas" class="form-label"
+                    >Kelas <span class="text-danger">*</span></label
+                  >
+                  <select class="form-select rounded-3" id="kelas" required>
+                    <option value="" selected disabled>Pilih Kelas...</option>
                     <option>X IPA 1</option>
                     <option>XI IPS 2</option>
                     <option>XII BAHASA 3</option>
@@ -281,285 +229,382 @@
                   </select>
                 </div>
                 <div class="col-md-6">
-                  <label for="edit-wali" class="form-label"
-                    >Nama Wali Murid</label
+                  <label for="jenisKelamin" class="form-label"
+                    >Jenis Kelamin <span class="text-danger">*</span></label
+                  >
+                  <select
+                    class="form-select rounded-3"
+                    id="jenisKelamin"
+                    required
+                  >
+                    <option value="" selected disabled>
+                      Pilih Jenis Kelamin...
+                    </option>
+                    <option value="Laki-laki">Laki-laki</option>
+                    <option value="Perempuan">Perempuan</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <h5 class="mt-4 mb-2 text-success">Data Wali/Orang Tua</h5>
+                </div>
+                <div class="col-md-12">
+                  <label for="wali" class="form-label"
+                    >Nama Wali/Orang Tua
+                    <span class="text-danger">*</span></label
                   >
                   <input
                     type="text"
                     class="form-control rounded-3"
-                    id="edit-wali"
+                    id="wali"
                     required
                   />
                 </div>
               </div>
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary rounded-3"
-                data-bs-dismiss="modal"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                class="btn btn-warning text-white rounded-3"
-              >
-                <i class="fas fa-save me-1"></i> Simpan Perubahan
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary rounded-3"
+              data-bs-dismiss="modal"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              form="siswaForm"
+              class="btn btn-success rounded-3"
+              id="btnSubmitSiswaForm"
+            >
+              <i class="fas fa-plus me-1"></i> Tambah Siswa
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-success border-2">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-check-circle me-2"></i> Sukses!
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="successMessage"></p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-success rounded-3"
+              data-bs-dismiss="modal"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="deleteModal"
+      tabindex="-1"
+      aria-labelledby="deleteModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-danger border-2">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="deleteModalLabel">
+              <i class="fas fa-exclamation-triangle me-2"></i> Konfirmasi Hapus
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Apakah Anda yakin ingin menghapus data siswa **<span
+                id="deleteSiswaName"
+              ></span
+              >** (NIS: <span id="deleteSiswaNis"></span>)?
+            </p>
+            <p class="text-danger fw-bold">
+              Tindakan ini tidak bisa dibatalkan.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary rounded-3"
+              data-bs-dismiss="modal"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger rounded-3"
+              id="confirmDelete"
+              data-nis=""
+            >
+              Ya, Hapus
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script
-      type="text/javascript"
-      charset="utf8"
-      src="https://cdn.datatables.net/2.3.4/js/dataTables.js"
-    ></script>
-
     <script>
-      $(document).ready(function () {
-        // Data Dummy Siswa
-        let siswaData = [
-          {
-            id: 1,
-            nis: "123456",
-            nama: "Ahmad Budi Santoso",
-            kelas: "XII IPA 1",
-            wali: "Bapak Heru Santoso",
-          },
-          {
-            id: 2,
-            nis: "123457",
-            nama: "Siti Aminah",
-            kelas: "XI IPS 2",
-            wali: "Ibu Fatimah",
-          },
-          {
-            id: 3,
-            nis: "123458",
-            nama: "Joko Susanto",
-            kelas: "X IPA 1",
-            wali: "Bapak Bambang",
-          },
-          {
-            id: 4,
-            nis: "123459",
-            nama: "Dewi Lestari",
-            kelas: "XII BAHASA 3",
-            wali: "Ibu Kartika",
-          },
-          // Tambahkan data lainnya agar tabel lebih panjang
-          {
-            id: 5,
-            nis: "123460",
-            nama: "Rio Firmansyah",
-            kelas: "X IPS 1",
-            wali: "Bapak Sugiarto",
-          },
-          {
-            id: 6,
-            nis: "123461",
-            nama: "Nadia Putri",
-            kelas: "XI IPA 2",
-            wali: "Ibu Rina",
-          },
-          {
-            id: 7,
-            nis: "123462",
-            nama: "Chandra Wijaya",
-            kelas: "XII IPA 3",
-            wali: "Bapak Chandra Senior",
-          },
-          {
-            id: 8,
-            nis: "123463",
-            nama: "Fitriani",
-            kelas: "X IPA 1",
-            wali: "Ibu Eka",
-          },
-          {
-            id: 9,
-            nis: "123464",
-            nama: "Herman Ali",
-            kelas: "XI IPS 2",
-            wali: "Bapak Ahmad",
-          },
-          {
-            id: 10,
-            nis: "123465",
-            nama: "Indah Kusuma",
-            kelas: "XII IPA 1",
-            wali: "Ibu Maria",
-          },
-        ];
+      // Simulasi Data Siswa
+      let students = [
+        {
+          nis: "123456",
+          nama: "Budi Santoso",
+          kelas: "X IPA 1",
+          jk: "Laki-laki",
+          wali: "Bpk. Aji",
+        },
+        {
+          nis: "123457",
+          nama: "Siti Fatimah",
+          kelas: "XI IPS 2",
+          jk: "Perempuan",
+          wali: "Ibu Dian",
+        },
+      ];
 
-        // Fungsi untuk membuat baris aksi
-        function createActionButtons(data) {
-          return `
-                    <button class="btn btn-sm btn-warning rounded-3 me-2 btn-edit" data-id="${data.id}" data-bs-toggle="modal" data-bs-target="#editSiswaModal" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger rounded-3 btn-delete" data-id="${data.id}" title="Hapus">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                `;
+      // Variabel Global untuk DOM dan Modal
+      const studentTableBody = document.getElementById("studentTableBody");
+      const totalStudentsEl = document.getElementById("totalStudents");
+      const successMessageEl = document.getElementById("successMessage");
+      const siswaFormModal = new bootstrap.Modal(
+        document.getElementById("siswaFormModal")
+      );
+      const successModal = new bootstrap.Modal(
+        document.getElementById("successModal")
+      );
+      const deleteModal = new bootstrap.Modal(
+        document.getElementById("deleteModal")
+      );
+      const siswaForm = document.getElementById("siswaForm");
+      const btnSubmitSiswaForm = document.getElementById("btnSubmitSiswaForm");
+      const modalHeaderEl = document.getElementById("modalHeader");
+      const siswaFormModalLabel = document.getElementById(
+        "siswaFormModalLabel"
+      );
+
+      // Elemen Form
+      const nisInput = document.getElementById("nis");
+      const namaLengkapInput = document.getElementById("namaLengkap");
+      const kelasInput = document.getElementById("kelas");
+      const jenisKelaminInput = document.getElementById("jenisKelamin");
+      const waliInput = document.getElementById("wali");
+      const originalNisInput = document.getElementById("originalNis");
+
+      // --- FUNGSI UTAMA ---
+
+      /**
+       * Memperbarui tampilan tabel siswa.
+       */
+      function renderTable() {
+        studentTableBody.innerHTML = "";
+        students.forEach((student) => {
+          const jkInitial = student.jk.charAt(0); // L atau P
+
+          const row = studentTableBody.insertRow();
+          row.innerHTML = `
+            <td>${student.nis}</td>
+            <td>${student.nama}</td>
+            <td>${student.kelas}</td>
+            <td>${jkInitial}</td>
+            <td>${student.wali}</td>
+            <td>
+              <button 
+                class="btn btn-sm btn-info text-white me-1 btn-edit" 
+                title="Edit"
+                data-nis="${student.nis}"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button 
+                class="btn btn-sm btn-danger btn-delete" 
+                title="Hapus"
+                data-nis="${student.nis}"
+                data-nama="${student.nama}"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          `;
+        });
+        totalStudentsEl.textContent = students.length;
+        attachTableListeners();
+      }
+
+      /**
+       * Memasang event listener untuk tombol Edit dan Hapus
+       */
+      function attachTableListeners() {
+        // Edit Listener
+        document.querySelectorAll(".btn-edit").forEach((button) => {
+          button.addEventListener("click", function () {
+            const nisToEdit = this.getAttribute("data-nis");
+            openSiswaFormModal("edit", nisToEdit);
+          });
+        });
+
+        // Delete Listener
+        document.querySelectorAll(".btn-delete").forEach((button) => {
+          button.addEventListener("click", function () {
+            const nisToDelete = this.getAttribute("data-nis");
+            const namaToDelete = this.getAttribute("data-nama");
+            openDeleteModal(nisToDelete, namaToDelete);
+          });
+        });
+      }
+
+      /**
+       * Mengkonfigurasi dan menampilkan modal Tambah/Edit.
+       * @param {string} mode 'add' atau 'edit'
+       * @param {string} nisToEdit NIS siswa yang akan diedit (hanya relevan jika mode='edit')
+       */
+      function openSiswaFormModal(mode, nisToEdit = null) {
+        siswaForm.reset();
+        originalNisInput.value = "";
+
+        if (mode === "add") {
+          // Mode Tambah
+          siswaFormModalLabel.textContent = "Tambah Siswa Baru";
+          btnSubmitSiswaForm.innerHTML =
+            '<i class="fas fa-plus me-1"></i> Tambah Siswa';
+          btnSubmitSiswaForm.classList.replace("btn-primary", "btn-success");
+          modalHeaderEl.classList.replace("bg-primary", "bg-success");
+          nisInput.disabled = false;
+        } else if (mode === "edit" && nisToEdit) {
+          // Mode Edit
+          const student = students.find((s) => s.nis === nisToEdit);
+          if (!student) return;
+
+          siswaFormModalLabel.textContent = `Edit Data Siswa: ${student.nama}`;
+          btnSubmitSiswaForm.innerHTML =
+            '<i class="fas fa-save me-1"></i> Simpan Perubahan';
+          btnSubmitSiswaForm.classList.replace("btn-success", "btn-primary");
+          modalHeaderEl.classList.replace("bg-success", "bg-primary");
+
+          // Isi Form
+          originalNisInput.value = student.nis; // Simpan NIS lama
+          nisInput.value = student.nis;
+          namaLengkapInput.value = student.nama;
+          kelasInput.value = student.kelas;
+          jenisKelaminInput.value = student.jk;
+          waliInput.value = student.wali;
+
+          nisInput.disabled = true; // NIS tidak boleh diubah saat edit
         }
+        siswaFormModal.show();
+      }
 
-        // Inisialisasi DataTables
-        let table = $("#siswaTable").DataTable({
-          // Siapkan data DataTables dari array dummy
-          data: siswaData.map((s) => [
-            s.nis,
-            s.nama,
-            s.kelas,
-            s.wali,
-            createActionButtons(s),
-          ]),
-          columns: [
-            { title: "NIS" },
-            { title: "Nama Siswa" },
-            { title: "Kelas" },
-            { title: "Wali Murid" },
-            { title: "Aksi", orderable: false, searchable: false },
-          ],
-          // Menggunakan bahasa Indonesia untuk DataTables
+      /**
+       * Mengkonfigurasi dan menampilkan modal Hapus.
+       * @param {string} nis NIS siswa yang akan dihapus
+       * @param {string} nama Nama siswa
+       */
+      function openDeleteModal(nis, nama) {
+        document.getElementById("deleteSiswaName").textContent = nama;
+        document.getElementById("deleteSiswaNis").textContent = nis;
+        document.getElementById("confirmDelete").setAttribute("data-nis", nis);
+        deleteModal.show();
+      }
 
-          responsive: true,
+      // --- EVENT LISTENERS ---
+
+      // 1. Pemicu Modal Tambah
+      document
+        .getElementById("btnAddSiswa")
+        .addEventListener("click", function () {
+          openSiswaFormModal("add");
         });
 
-        // Logika Edit Siswa
-        $("#siswaTable tbody").on("click", ".btn-edit", function () {
-          const siswaId = $(this).data("id");
-          // Cari data siswa berdasarkan ID
-          const siswa = siswaData.find((s) => s.id === siswaId);
+      // 2. Handler Submit Form Tambah/Edit
+      siswaForm.addEventListener("submit", function (e) {
+        e.preventDefault();
 
-          if (siswa) {
-            $("#edit-siswa-id").val(siswa.id);
-            $("#edit-nis").val(siswa.nis);
-            $("#edit-nama").val(siswa.nama);
-            $("#edit-kelas").val(siswa.kelas);
-            $("#edit-wali").val(siswa.wali);
-          }
-        });
+        const nis = nisInput.value;
+        const nama = namaLengkapInput.value;
+        const kelas = kelasInput.value;
+        const jenisKelamin = jenisKelaminInput.value;
+        const wali = waliInput.value;
+        const originalNis = originalNisInput.value;
 
-        $("#editSiswaForm").on("submit", function (e) {
-          e.preventDefault();
-          const id = parseInt($("#edit-siswa-id").val());
-          const nama = $("#edit-nama").val();
-          const kelas = $("#edit-kelas").val();
-          const wali = $("#edit-wali").val();
+        let message;
 
-          // Cari index baris di DataTables berdasarkan ID siswa
-          const index = siswaData.findIndex((s) => s.id === id);
-
+        if (originalNis) {
+          // LOGIKA EDIT (UPDATE)
+          const index = students.findIndex((s) => s.nis === originalNis);
           if (index !== -1) {
-            // 1. Update dummy data
-            siswaData[index].nama = nama;
-            siswaData[index].kelas = kelas;
-            siswaData[index].wali = wali;
-
-            // 2. Update DataTables row
-            table
-              .row(index)
-              .data([
-                siswaData[index].nis,
-                siswaData[index].nama,
-                siswaData[index].kelas,
-                siswaData[index].wali,
-                createActionButtons(siswaData[index]),
-              ])
-              .draw(false);
+            students[index] = { nis, nama, kelas, jk: jenisKelamin, wali };
+            message = `Data siswa **${nama} (${nis})** berhasil diperbarui.`;
+          } else {
+            alert("Error: Data siswa tidak ditemukan untuk diperbarui.");
+            return;
           }
-
-          // Tutup modal
-          bootstrap.Modal.getInstance(
-            document.getElementById("editSiswaModal")
-          ).hide();
-          // Tampilkan alert sukses
-          showCustomAlert("success", "Data Siswa Berhasil Diperbarui!");
-        });
-
-        // Logika Hapus Siswa
-        $("#siswaTable tbody").on("click", ".btn-delete", function () {
-          const siswaId = $(this).data("id");
-          const rowElement = $(this).closest("tr");
-
-          // Tampilkan modal konfirmasi hapus
-          showDeleteConfirmationModal(siswaId, rowElement);
-        });
-
-        // --- Custom Alert dan Modal Konfirmasi ---
-
-        function showCustomAlert(type, message) {
-          const alertHtml = `
-                    <div class="alert alert-${type} alert-dismissible fade show fixed-top mt-3 mx-auto" role="alert" style="max-width: 400px; z-index: 1060;">
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `;
-          $("body").append(alertHtml);
-          // Auto hide after 3 seconds
-          setTimeout(() => $(".alert").alert("close"), 3000);
+        } else {
+          // LOGIKA TAMBAH (CREATE)
+          if (students.some((s) => s.nis === nis)) {
+            alert("NIS sudah ada. Mohon gunakan NIS yang unik.");
+            return;
+          }
+          const newStudent = { nis, nama, kelas, jk: jenisKelamin, wali };
+          students.push(newStudent);
+          message = `Data siswa **${nama} (${nis})** berhasil ditambahkan.`;
         }
 
-        function showDeleteConfirmationModal(siswaId, rowElement) {
-          const modalId = "deleteConfirmModal";
-          let modal = bootstrap.Modal.getInstance(
-            document.getElementById(modalId)
-          );
+        siswaFormModal.hide();
+        renderTable();
 
-          // Jika modal belum ada, buat (hanya sekali)
-          if (!modal) {
-            const modalHtml = `
-                        <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content rounded-4 border-danger border-2">
-                                    <div class="modal-header bg-danger text-white">
-                                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Konfirmasi Hapus Data</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        Anda yakin ingin menghapus data siswa ini? Aksi ini tidak dapat dibatalkan.
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
-                                        <button type="button" class="btn btn-danger rounded-3" id="confirmDeleteButton">Hapus Permanen</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-            $("body").append(modalHtml);
-            modal = new bootstrap.Modal(document.getElementById(modalId));
-          }
-
-          modal.show();
-
-          // Detach previous event handler and attach new one to prevent multiple calls
-          $("#confirmDeleteButton")
-            .off("click")
-            .on("click", function () {
-              // Hapus data dari array dummy
-              const initialLength = siswaData.length;
-              siswaData = siswaData.filter((s) => s.id !== siswaId);
-
-              if (siswaData.length < initialLength) {
-                // Hapus baris dari DataTables
-                table.row(rowElement).remove().draw(false);
-                modal.hide();
-                showCustomAlert("danger", "Data Siswa Berhasil Dihapus.");
-              } else {
-                modal.hide();
-                showCustomAlert("warning", "Gagal menghapus data.");
-              }
-            });
-        }
+        successMessageEl.innerHTML = message;
+        successModal.show();
       });
+
+      // 3. Handler Konfirmasi Hapus
+      document
+        .getElementById("confirmDelete")
+        .addEventListener("click", function () {
+          const nisToDelete = this.getAttribute("data-nis");
+          const studentName =
+            document.getElementById("deleteSiswaName").textContent;
+
+          // LOGIKA HAPUS (DELETE)
+          const initialLength = students.length;
+          students = students.filter((s) => s.nis !== nisToDelete);
+
+          if (students.length < initialLength) {
+            // Berhasil Dihapus
+            deleteModal.hide();
+            renderTable();
+
+            successMessageEl.innerHTML = `Data siswa **${studentName}** (NIS: ${nisToDelete}) telah berhasil dihapus.`;
+            successModal.show();
+          } else {
+            alert("Error: Data siswa tidak ditemukan.");
+            deleteModal.hide();
+          }
+        });
+
+      // Panggil fungsi render untuk inisialisasi tabel saat halaman dimuat
+      renderTable();
     </script>
   </body>
 </html>
